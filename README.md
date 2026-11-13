@@ -45,3 +45,11 @@ Create an Upstash Redis database and set UPSTASH_REDIS_REST_URL and UPSTASH_REDI
 The server-only variables in .env.example also enable NEAR AI recommendations and Rhea quotes. NEAR_AI_MODEL is optional. A quote is a preview; the current app does not sign transactions. Before a public release with paid provider keys, add authentication and usage limits.
 
 On Vercel set FIELDWORK_OPERATOR_TOKEN to a long random secret. Hosted AI and quote calls require it. The operator enters it when prompted. Tester invitations do not require this operator credential.
+
+## Beta access and sign-in
+
+Join beta stores a request using the same local disk or hosted Upstash configuration as tester invitations. Returning requests for the same email are deduplicated. On Vercel set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.
+
+For email sign-in set SUPABASE_URL and SUPABASE_ANON_KEY on the server, enable the Supabase email provider, and include {{ .Token }} in the confirmation and magic link email templates. Configure email delivery in Supabase. Verification opens a per-account browser journal. Campaigns are device-local. The device demo opens the existing local journal and requires no provider credentials. Operator-protected remote actions still require FIELDWORK_OPERATOR_TOKEN.
+
+Restart the preview server after changing API routes or environment settings.

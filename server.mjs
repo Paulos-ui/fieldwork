@@ -1,10 +1,11 @@
+import {POST as access} from './app/api/access/route.js';
 import {createServer} from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {POST as agent} from './app/api/agent/route.js';
 import {POST as quote} from './app/api/quote/route.js';
 import {POST as fieldtest} from './app/api/fieldtest/route.js';
 const assets={'/':['fieldwork.html','text/html'],'/fieldwork.html':['fieldwork.html','text/html'],'/fieldwork.css':['fieldwork.css','text/css'],'/fieldwork.js':['fieldwork.js','text/javascript']};
-const routes={'/api/agent':agent,'/api/quote':quote,'/api/fieldtest':fieldtest};
+const routes={'/api/access':access,'/api/agent':agent,'/api/quote':quote,'/api/fieldtest':fieldtest};
 const port=Number(process.env.PORT || 4173);
 createServer(async(req,res)=>{
   try {
