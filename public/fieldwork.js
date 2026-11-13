@@ -1,6 +1,7 @@
 'use strict';
 const agents=['Pitch Coach','Scout','Reviewer','Paymaster','Retest'];
 const guide=['Identify the user, action and visible outcome of the pitch. Approve a testable brief.','Match a device requirement to a tester profile and keep the selection with the campaign.','Compare evidence with the brief. Return incomplete reports before approving a reward.','Prepare a reward in USDC. A configured server can request a live NEAR-to-Base quote from Rhea.','Repeat the original steps on a new build and record whether the issue is fixed.'];
+const sampleHandoffs = ["Brief approved · Return from wallet approval and check for an account address.","Assignment · Android tester, RC.1, wallet already installed.","Evidence accepted · Approval succeeded. The return screen kept loading.","Reward preview · 10 USDC for the accepted report. Builder reviews the quote.","Retest passed · On RC.2 the address appears after the same approval steps."];
 const root=document.querySelector('#screen');
 const defaults={name:'Jayking',device:'Android',campaigns:[],selected:0};
 let db;
@@ -14,17 +15,33 @@ const nodePositions=[[12,62],[31,27],[50,55],[69,23],[88,53]];
 function plot(text,offset){return [...text].map((ch,i)=>'<b aria-hidden="true" style="--i:'+(offset+i)+'">'+(ch===' '?'&nbsp;':ch)+'</b>').join('')}
 function landing(){
  const rays=Array.from({length:24},(_,i)=>{const t=i*Math.PI/12;return '<line x1="400" y1="400" x2="'+(400+380*Math.cos(t))+'" y2="'+(400+380*Math.sin(t))+'"/>'}).join('');
- return '<section class="origin"><div class="origin-frame"><svg class="rays" viewBox="0 0 800 800" aria-hidden="true">'+rays+'</svg><div class="origin-copy"><small>NEAR / Beta tester connect</small><h1 aria-label="Test with real builders.">'+plot('Test with',0)+'<br><span>'+plot('real builders.',9)+'</span></h1><p>Fieldwork coordinates five agents to turn your pitch into a test campaign, review real evidence and verify the fix.</p><a class="button" href="#workspace">Launch console ↗</a> <a href="#constellation">Explore agents ↓</a></div></div></section><section class="sky" id="constellation"><div class="sky-frame"><small>Agent system / NEAR</small><h2>From pitch review<br>to verified fix.</h2><div class="instruments"><div class="chart"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+nodePositions.map(p=>p.join(',')).join(' ')+'" pathLength="1"/></svg>'+agents.map((a,i)=>'<button type="button" data-node="'+i+'" aria-label="'+a+'" style="left:'+nodePositions[i][0]+'%;top:'+nodePositions[i][1]+'%"><i></i><span>'+a+'</span></button>').join('')+'</div><div class="readout"><small id="unit"></small><h3 id="agentName"></h3><p id="agentRole"></p><a href="#workspace">Open console →</a></div></div></div></section><section class="guide" id="guide"><aside><small>System documentation</small><h2>Release pipeline</h2><p>Follow one campaign from the builder’s pitch through the tester’s evidence to the verified fix.</p></aside><div>'+agents.map((a,i)=>'<article><small>Stage 0'+(i+1)+'</small><h3>'+a+'</h3><p>'+guide[i]+'</p></article>').join('')+'</div></section>'
+ return '<div class="hud" aria-hidden="true"><span id="hudStage">FIELDWORK / BRIEF</span><span id="hudPct">0%</span></div><section class="origin"><div class="origin-frame"><svg class="rays" viewBox="0 0 800 800" aria-hidden="true">'+rays+'</svg><aside class="frame-label" aria-hidden="true">NEAR ECOSYSTEM<br>BUILDER OPERATIONS</aside><aside class="frame-label right" aria-hidden="true">CAMPAIGN NETWORK<br>05 AGENT MODULES</aside><div class="scan-ring" aria-hidden="true"></div><div class="hero-foot">↓ &nbsp; SCROLL TO TRACE THE RELEASE</div><div class="origin-copy"><small>NEAR / Beta tester connect</small><h1 aria-label="Test with real builders.">'+plot('Test with',0)+'<br><span>'+plot('real builders.',9)+'</span></h1><p>Fieldwork coordinates five agents to turn your pitch into a test campaign, review real evidence and verify the fix.</p><a class="button" href="#workspace">Launch console ↗</a> <a href="#constellation">Explore agents ↓</a></div></div></section><section class="specimen" id="release"><div><small>Campaign walkthrough / Example</small><h2>One wallet bug.<br><em>Two builds.</em></h2><p>A builder promises that Android users can return from their wallet and see a connected account. Follow the same report through all five handoffs.</p></div><div class="case-file"><small>Test record · Android</small><h3>Wallet return flow</h3><dl><dt>Expected</dt><dd>Account address appears after approval.</dd><dt>Build RC.1</dt><dd>Tester returns to a loading screen.</dd><dt>Build RC.2</dt><dd>The same steps now show the address.</dd></dl><a href="#workspace">Create a testing brief ↗</a></div></section><section class="sky" id="constellation"><div class="sky-frame"><small>Agent system / NEAR</small><h2>From pitch review<br>to verified fix.</h2><div class="instruments"><div class="chart"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+nodePositions.map(p=>p.join(',')).join(' ')+'" pathLength="1"/></svg><i class="packet" aria-hidden="true"></i>'+agents.map((a,i)=>'<button type="button" data-node="'+i+'" aria-label="'+a+'" style="left:'+nodePositions[i][0]+'%;top:'+nodePositions[i][1]+'%"><i></i><span>'+a+'</span></button>').join('')+'</div><div class="readout"><small id="unit"></small><h3 id="agentName"></h3><p id="agentRole"></p><div class="handoff"><small>Example campaign output</small><p id="handoffText"></p></div><a href="#workspace">Open console →</a></div></div></div></section><section class="guide" id="guide"><aside><small>System documentation</small><h2>Release pipeline</h2><p>Follow one campaign from the builder’s pitch through the tester’s evidence to the verified fix.</p></aside><div>'+agents.map((a,i)=>'<article><small>Stage 0'+(i+1)+'</small><h3>'+a+'</h3><p>'+guide[i]+'</p></article>').join('')+'</div></section>'
 }
 let selectedNode=null;
 function draw(){
  const sky=document.querySelector('.sky');if(!sky)return;
  const progress=Math.max(0,Math.min(1,-sky.getBoundingClientRect().top/Math.max(1,sky.offsetHeight-innerHeight)));
- const index=selectedNode??Math.min(4,Math.floor(progress*5));
+ const fraction=Math.min(1,Math.max(0,scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight)));
+ root.style.setProperty('--read',Math.round(fraction*100)+'%');
+ document.querySelector('#hudPct').textContent=Math.round(fraction*100)+'%';
+ const chapters=[['.origin','BRIEF'],['.specimen','TEST RECORD'],['.sky','AGENTS'],['.guide','WORKFLOW']];
+ const chapter=chapters.filter(([selector])=>document.querySelector(selector).getBoundingClientRect().top<=innerHeight*.48).at(-1);
+ document.querySelector('#hudStage').textContent='FIELDWORK / '+(chapter?.[1]||'BRIEF');
+ const index=selectedNode??Math.round(progress*4);
  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  root.style.setProperty('--hero-shift',reduced?'0px':(-Math.min(innerHeight,scrollY)*.17)+'px');
  root.style.setProperty('--ray-scale',reduced?'1':String(1+Math.min(1,scrollY/innerHeight)*.25));
- root.style.setProperty('--trace',String(1-Math.max(progress,index/4)));
+ const position=selectedNode ?? progress*4;
+ const segment=Math.min(3,Math.floor(position));
+ const t=position-segment;
+ const [x,y]=nodePositions[segment], [nx,ny]=nodePositions[segment+1];
+ root.style.setProperty('--packet-x',(x+(nx-x)*t)+'%');
+ root.style.setProperty('--packet-y',(y+(ny-y)*t)+'%');
+ const track=document.querySelector('.chart polyline');
+ const lengths=nodePositions.slice(1).map(([a,b],i)=>Math.hypot(a-nodePositions[i][0],b-nodePositions[i][1]));
+ const travelled=lengths.slice(0,segment).reduce((a,b)=>a+b,0)+lengths[segment]*t;
+ track.style.strokeDashoffset=String(1-travelled/lengths.reduce((a,b)=>a+b,0));
+ document.querySelector('#handoffText').textContent=sampleHandoffs[index];
  document.querySelectorAll('[data-node]').forEach((el,i)=>el.setAttribute('aria-pressed',String(i===index)));
  document.querySelector('#unit').textContent='Module 0'+(index+1)+' / 05';
  document.querySelector('#agentName').textContent=agents[index];document.querySelector('#agentRole').textContent=guide[index];
@@ -61,7 +78,7 @@ function ledger(page){
 function consoleScreen(page){const content=page==='workspace'?workspace():page==='profile'?profileScreen():page==='modules'?'<section class="desk"><small>Operations</small><h2>Agent rack</h2>'+rack()+'</section>':ledger(page);return '<div class="console-shell">'+sidebar(page)+content+'</div>'}
 
 function workspace(){const c=db.campaigns[db.selected];return '<section class="desk"><small>'+esc(db.name)+' / Campaign operations</small><h2>Campaigns</h2><details '+(!c?'open':'')+'><summary>Create campaign</summary><form id="create">'+input('name','Project name')+input('pitch','Builder pitch')+'<button>Create campaign</button></form></details>'+(c?'<label>Open campaign<select id="switch">'+db.campaigns.map((v,i)=>'<option value="'+i+'" '+(i===db.selected?'selected':'')+'>'+esc(v.name)+'</option>').join('')+'</select></label><h3>'+esc(c.name)+'</h3><p>'+esc(c.pitch)+'</p>'+c.notes.map(n=>'<section class="log"><strong>'+esc(n.agent)+'</strong><p>'+esc(n.note)+'</p></section>').join('')+stageForm(c):'')+'</section>'}
-function render(){const page=location.hash.slice(1);root.innerHTML=page.startsWith('test/')?testerPage():Object.hasOwn(consolePages,page)?consoleScreen(page):landing();root.insertAdjacentHTML('beforeend','<p role="status" id="message"></p>');draw();if(page.startsWith('test/'))loadTesterBrief();if(page==='constellation')document.querySelector('.sky').scrollIntoView();if(page==='guide')document.querySelector('#guide').scrollIntoView()}
+function render(){const page=location.hash.slice(1);root.innerHTML=page.startsWith('test/')?testerPage():Object.hasOwn(consolePages,page)?consoleScreen(page):landing();root.insertAdjacentHTML('beforeend','<p role="status" id="message"></p>');draw();if(page.startsWith('test/'))loadTesterBrief();if(page==='constellation')document.querySelector('.sky').scrollIntoView();if(page==='release')document.querySelector('#release').scrollIntoView();if(page==='guide')document.querySelector('#guide').scrollIntoView()}
 root.onchange=e=>{if(e.target.id==='switch')save({...db,selected:Number(e.target.value)})};
 root.onclick=async e=>{if(e.target.id==='invite'||e.target.id==='collect'){
  const c=db.campaigns[db.selected],msg=document.querySelector('#message');try{
