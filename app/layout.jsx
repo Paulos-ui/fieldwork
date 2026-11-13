@@ -1,0 +1,2 @@
+export const metadata = {title:'Fieldwork',description:'A beta campaign journal for NEAR builders.'};
+export default function Layout({children}){return <html lang="en"><body style={{margin:0}}>{children}</body></html>}
