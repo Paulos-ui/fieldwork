@@ -8,3 +8,37 @@ body[data-view=console]{background:#edf1e7;color:#213d32}body[data-view=console]
 @media(max-width:760px){body>header{display:grid;grid-template-columns:auto 1fr;gap:8px}.access-links{grid-row:1;grid-column:2;justify-self:end;font-size:12px}.access-links .button{padding:6px 10px}body>header nav{grid-column:1/-1}.proof-sheet,.access-screen{grid-template-columns:1fr}.spec-layout{grid-template-columns:1fr}.spec-layout nav{position:static;display:grid;grid-template-columns:1fr 1fr}.spec-layout article{min-height:220px}.record-art{min-height:250px}.console-shell .rail{padding:14px}.console-shell .rail nav{display:flex;flex-wrap:wrap;margin:5px 0}.desk .rack{grid-template-columns:1fr}.beta-sheet form{grid-template-columns:1fr}.proof-sheet dl{grid-template-columns:1fr;gap:4px}.proof-sheet dd{margin-bottom:12px}}
 
 .track-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px;margin:28px 0}.track-stage{padding:16px;background:#faf9ec;border:1px solid #acc1ad;border-radius:4px}.track-stage header{position:static;padding:0 0 12px;min-height:0;color:#18392d;background:none;border-color:#bacdbb}.track-stage h3{font-size:21px}.track-stage header span{font:14px monospace;color:#2a5948}.track-stage>p{font-size:14px;color:#59685a}.track-card{width:100%;margin:12px 0 0;text-align:left;border-left:3px solid #408b62;background:#e4eee0;color:#163929}.track-card strong,.track-card span{display:block;overflow-wrap:anywhere}.track-card span{font:12px monospace;margin-top:8px}.record-download{background:transparent;color:#264c35;border:1px solid #829884;margin-bottom:16px}
+
+/* Builder access: red earth, ink and uncoated paper. */
+body[data-view="access"] {
+  background: #cf987b;
+  color: #30221f;
+}
+.access-screen {
+  color: #30221f;
+  background-color: #cf987b;
+  background-image: radial-gradient(circle, #5e3d322e .8px, transparent 1px);
+  background-size: 18px 18px;
+}
+.access-screen .access-intro small {
+  color: #4e3028;
+  border-top: 2px solid currentColor;
+  padding-top: 10px;
+}
+.access-intro h1 { color: #30221f; }
+.access-screen .access-card {
+  color: #292822;
+  background: #fffaf1;
+  border: 1px solid #67483c;
+  border-top: 5px solid #382a24;
+  box-shadow: 6px 6px 0 #af765b;
+}
+.access-card small { color: #76503d; }
+.access-card input { background: #fffefa; color: #292822; border-color: #8e8275; }
+.access-card form button { background: #235540; color: #fffaf1; }
+.access-card form button:hover { background: #19432f; }
+.access-card .demo-entry { color: #483328; border-color: #978171; }
+.access-card .demo-entry:hover { background: #f1e5d8; }
+.access-card a { color: #63432f; }
+.access-card :focus-visible { outline: 3px solid #8e4126; outline-offset: 3px; }
+body[data-view="access"] footer { color: #3f2a22; border-color: #886451; }
