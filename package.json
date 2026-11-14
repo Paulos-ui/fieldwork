@@ -14,11 +14,12 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "@near-wallet-selector/core": "10.1.4",
-    "@near-wallet-selector/modal-ui": "10.1.4",
     "@near-wallet-selector/my-near-wallet": "10.1.4",
     "@near-wallet-selector/meteor-wallet": "10.1.4",
     "buffer": "^6.0.3",
-    "util": "^0.12.5"
+    "util": "^0.12.5",
+    "@near-wallet-selector/hot-wallet": "10.1.4",
+    "process": "^0.11.10"
   },
   "type": "module",
   "devDependencies": {

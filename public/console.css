@@ -57,3 +57,26 @@ body[data-view=console] .desk .record-download{background:#f2f6ee;color:#496e50}
 @media(max-width:1000px){.console-account{gap:8px}.console-account a{max-width:120px}.console-toolbar{padding:0 22px}.console-toolbar nav{gap:18px}.console-body{grid-template-columns:minmax(0,1fr) 250px;gap:20px;padding:0 22px}.console-aside{padding-left:18px}.agent-market{grid-template-columns:1fr}}
 @media(max-width:760px){.console-toolbar{display:block;padding-top:12px}.console-toolbar nav{display:flex;gap:22px;overflow:auto}.console-toolbar nav a{padding:12px 0;white-space:nowrap}.console-account{padding:8px 0;border-top:1px solid #eef1ed;justify-content:space-between}.console-account a{max-width:none}.console-body{display:block;padding:0 18px}.console-aside{border:0;border-top:1px solid #e4ebe5;padding:22px 0}.console-hero{grid-template-columns:1fr;padding:30px 22px;gap:0;min-height:210px}.network-art{display:none}.console-hero h1{font-size:34px}.console-hero p{font-size:13px}.browse-heading{align-items:start}.browse-heading h2{font-size:22px!important}.browse-heading>a,.browse-heading>span{font-size:10px}.browse-controls{flex-wrap:wrap}.browse-controls .search-label{min-width:100%}.browse-tabs{gap:18px}.opportunity-row{padding:18px 0;gap:12px}.org-mark{width:40px;height:40px;font-size:20px}.opportunity-title{font-size:14px}.agent-market{grid-template-columns:1fr}.desk .metrics>div{padding:12px}.track-grid{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){.route-pulse{animation:none}}
+
+/* Wallet access uses the HTML hidden state throughout the flow. */
+[hidden]{display:none!important}
+.wallet-picker{width:min(480px,calc(100vw - 32px));max-height:calc(100svh - 40px);overflow:auto;padding:28px;border:1px solid #b6c8bc;border-radius:14px;background:#fffdf7;color:#27382d;box-shadow:0 28px 100px #071f2b40}
+.wallet-picker::backdrop{background:#10241ed6;backdrop-filter:blur(5px)}
+.wallet-picker-heading{display:flex;justify-content:space-between;align-items:start;gap:16px}
+.wallet-picker-heading small{font:10px monospace;color:#718978;letter-spacing:.15em}
+.wallet-picker h2{font-size:28px;margin:10px 0;color:#253e2d;letter-spacing:-.04em}
+.wallet-picker-heading>button{padding:2px 8px;background:transparent;color:#65796a;font-size:28px}
+.wallet-picker>p{color:#738174;font-size:13px;margin:5px 0 22px}
+.wallet-picker-list{display:grid;gap:10px}
+.wallet-picker-list>button{width:100%;display:flex;gap:14px;align-items:center;padding:16px;background:white;border:1px solid #dde6de;border-radius:8px;text-align:left;color:#294130}
+.wallet-picker-list>button:hover,.wallet-picker-list>button[aria-pressed=true]{border-color:#629474;background:#f1f6ed}
+.wallet-picker-list>button>span:nth-child(2){flex:1}
+.wallet-picker-list strong,.wallet-picker-list small{display:block}
+.wallet-picker-list strong{font-size:15px;font-weight:650}
+.wallet-picker-list small{font:11px/1.6 system-ui;text-transform:none;letter-spacing:0;color:#849183;margin-top:2px}
+.wallet-brand{width:42px;height:42px;display:grid;place-content:center;background:#1b2e24;color:#fff;border-radius:11px;font-weight:800;font-size:23px}
+.wallet-brand-hot-wallet{background:#ec6e32}.wallet-brand-meteor-wallet{background:#6b4c99}.wallet-brand-my-near-wallet{background:#24372b}
+.wallet-picker output{display:block;font-size:12px;line-height:1.6;margin:18px 0;color:#6c7d6e;min-height:20px}
+.wallet-picker>[data-wallet-continue]{background:#2b6245;color:white;width:100%;border-radius:6px;font-size:14px;padding:13px}
+.wallet-picker button:disabled{opacity:.55;cursor:wait}
+.wallet-picker :focus-visible{outline:3px solid #b27837;outline-offset:3px}

@@ -19,11 +19,13 @@ export async function POST(request) {
     if (data.op === 'logout') return reply({ok:true}, 200, sessionCookie(request, null));
     if (data.op === 'challenge') {
       const origin = new URL(request.url).origin;
+      const walletId=data.walletId||'my-near-wallet';
+      if(!['hot-wallet','meteor-wallet','my-near-wallet'].includes(walletId))return reply({error:'Choose a supported NEAR wallet.'},400);
       const challenge = {
-        kind:'challenge', id:randomBytes(16).toString('hex'),
+        kind:'challenge', walletId, id:randomBytes(16).toString('hex'),
         message:'Sign in to Fieldwork on NEAR mainnet. This request authorizes access to your Fieldwork workspace.',
         nonce:randomBytes(32).toString('base64'), recipient:new URL(origin).host,
-        callbackUrl:origin + '/fieldwork.html', expires:Date.now() + 300000
+        callbackUrl:walletId==='my-near-wallet'?origin + '/fieldwork.html':null, expires:Date.now() + 300000
       };
       return reply({...challenge, state:challenge.id}, 200, makeWalletCookie(request, challengeCookie, sealWalletValue(challenge), 300));
     }

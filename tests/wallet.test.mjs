@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {generateKeyPairSync, sign} from 'node:crypto';
+import {generateKeyPairSync, sign, createHash} from 'node:crypto';
 import {mkdtemp, rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
@@ -66,4 +66,41 @@ test('NEAR sign-in verifies NEP413, key ownership, origin, expiry, replay and se
     delete process.env.FIELDWORK_SESSION_SECRET;delete process.env.FIELDWORK_DATA_DIR;
     await rm(directory,{recursive:true,force:true});
   }
+});
+
+test('each NEAR adapter verifies its exact optional callback payload',async()=>{
+ const directory=await mkdtemp(path.join(tmpdir(),'fieldwork-wallet-modes-'));
+ const previous={secret:process.env.FIELDWORK_SESSION_SECRET,data:process.env.FIELDWORK_DATA_DIR,fetch:globalThis.fetch};
+ process.env.FIELDWORK_SESSION_SECRET='wallet-adapter-test-secret-more-than-32-characters';
+ process.env.FIELDWORK_DATA_DIR=directory;
+ const {publicKey,privateKey}=generateKeyPairSync('ed25519');
+ const key='ed25519:'+base58(publicKey.export({type:'spki',format:'der'}).subarray(-32));
+ const request=(data,cookie='')=>new Request('https://fieldwork.test/api/wallet',{method:'POST',headers:{origin:'https://fieldwork.test',cookie},body:JSON.stringify(data)});
+ globalThis.fetch=async()=>Response.json({result:{permission:'FullAccess'}});
+ function independentPayload(challenge,callback){
+  const tag=Buffer.alloc(4);tag.writeUInt32LE(2147484061);
+  const string=value=>{const data=Buffer.from(value);const size=Buffer.alloc(4);size.writeUInt32LE(data.length);return Buffer.concat([size,data])};
+  return createHash('sha256').update(Buffer.concat([tag,string(challenge.message),Buffer.from(challenge.nonce,'base64'),string(challenge.recipient),Buffer.from([callback?1:0]),...(callback?[string(callback)]:[])])).digest();
+ }
+ try{
+  assert.equal((await POST(request({op:'challenge',walletId:'ethereum'}))).status,400);
+  for(const walletId of ['my-near-wallet','meteor-wallet','hot-wallet']){
+   const response=await POST(request({op:'challenge',walletId}));
+   const challenge=await response.json(),cookie=response.headers.get('set-cookie').split(';')[0];
+   const callback=walletId==='my-near-wallet'?'https://fieldwork.test/fieldwork.html':null;
+   assert.equal(challenge.callbackUrl,callback);
+   assert.equal(challenge.walletId,walletId);
+   const data={op:'verify',id:challenge.id,accountId:'builder.near',publicKey:key};
+   const wrongCallback=callback?null:'https://fieldwork.test/fieldwork.html';
+   const wrong=sign(null,independentPayload(challenge,wrongCallback),privateKey).toString('base64');
+   assert.equal((await POST(request({...data,walletId:'my-near-wallet',signature:wrong},cookie))).status,401);
+   const signature=sign(null,independentPayload(challenge,callback),privateKey).toString('base64');
+   assert.equal((await POST(request({...data,signature},cookie))).status,200);
+  }
+ }finally{
+  globalThis.fetch=previous.fetch;
+  if(previous.secret===undefined)delete process.env.FIELDWORK_SESSION_SECRET;else process.env.FIELDWORK_SESSION_SECRET=previous.secret;
+  if(previous.data===undefined)delete process.env.FIELDWORK_DATA_DIR;else process.env.FIELDWORK_DATA_DIR=previous.data;
+  await rm(directory,{recursive:true,force:true});
+ }
 });

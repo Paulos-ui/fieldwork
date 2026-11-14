@@ -26,7 +26,8 @@ export function nep413Digest(challenge) {
   tag.writeUInt32LE(2147484061);
   const payload = Buffer.concat([
     tag, borshString(challenge.message), Buffer.from(challenge.nonce, 'base64'),
-    borshString(challenge.recipient), Buffer.from([1]), borshString(challenge.callbackUrl)
+    borshString(challenge.recipient),
+    ...(challenge.callbackUrl?[Buffer.from([1]),borshString(challenge.callbackUrl)]:[Buffer.from([0])])
   ]);
   return createHash('sha256').update(payload).digest();
 }

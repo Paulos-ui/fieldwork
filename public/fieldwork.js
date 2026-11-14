@@ -159,7 +159,7 @@ root.onclick=async e=>{
  if(bookmark){const id=bookmark.dataset.bookmark;const bookmarks=savedIds().includes(id)?savedIds().filter(value=>value!==id):[...savedIds(),id];save({...db,bookmarks});return}
  if(['wallet-connect','wallet-verify'].includes(e.target.id)){
   const output=document.querySelector('#wallet-status');e.target.disabled=true;
-  try{if(!window.FieldworkWallet)throw Error('Wallet tools are loading. Please try again.');await window.FieldworkWallet.connect(e.target.id==='wallet-verify')}
+  try{if(!window.FieldworkWallet)throw Error('Wallet tools did not load. Refresh this page and try again.');await window.FieldworkWallet.connect(e.target.id==='wallet-verify')}
   catch(error){output.textContent=error.message}finally{e.target.disabled=false}return
  }
 

@@ -5,7 +5,7 @@ import {POST as agent} from './app/api/agent/route.js';
 import {POST as quote} from './app/api/quote/route.js';
 import {POST as fieldtest} from './app/api/fieldtest/route.js';
 import {GET as walletSession,POST as wallet} from './app/api/wallet/route.js';
-const assets={'/':['fieldwork.html','text/html'],'/fieldwork.html':['fieldwork.html','text/html'],'/fieldwork.css':['fieldwork.css','text/css'],'/fieldwork.js':['fieldwork.js','text/javascript'],'/console.js':['console.js','text/javascript'],'/console.css':['console.css','text/css'],'/wallet.bundle.js':['wallet.bundle.js','text/javascript'],'/wallet.bundle.css':['wallet.bundle.css','text/css']};
+const assets={'/':['fieldwork.html','text/html'],'/fieldwork.html':['fieldwork.html','text/html'],'/fieldwork.css':['fieldwork.css','text/css'],'/fieldwork.js':['fieldwork.js','text/javascript'],'/console.js':['console.js','text/javascript'],'/console.css':['console.css','text/css'],'/wallet.bundle.js':['wallet.bundle.js','text/javascript'],'/wallet-provider.bundle.js':['wallet-provider.bundle.js','text/javascript']};
 const routes={'/api/access':access,'/api/agent':agent,'/api/quote':quote,'/api/fieldtest':fieldtest,'/api/wallet':wallet};
 const port=Number(process.env.PORT || 4173);
 createServer(async(req,res)=>{
