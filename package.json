@@ -2,16 +2,26 @@
   "name": "fieldwork",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build --webpack",
+    "dev": "npm run bundle:wallet && next dev --webpack",
+    "build": "npm run bundle:wallet && next build --webpack",
     "start": "next start",
     "test": "node --test",
-    "preview": "node server.mjs"
+    "preview": "node --env-file-if-exists=.env.local server.mjs",
+    "bundle:wallet": "node scripts/build-wallet.mjs"
   },
   "dependencies": {
     "next": "16.2.1",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "@near-wallet-selector/core": "10.1.4",
+    "@near-wallet-selector/modal-ui": "10.1.4",
+    "@near-wallet-selector/my-near-wallet": "10.1.4",
+    "@near-wallet-selector/meteor-wallet": "10.1.4",
+    "buffer": "^6.0.3",
+    "util": "^0.12.5"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
 }

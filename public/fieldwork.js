@@ -3,10 +3,9 @@ const agents=['Pitch Coach','Scout','Reviewer','Paymaster','Retest'];
 const guide=['Identify the user, action and visible outcome of the pitch. Approve a testable brief.','Match a device requirement to a tester profile and keep the selection with the campaign.','Compare evidence with the brief. Return incomplete reports before approving a reward.','Prepare a reward in USDC. A configured server can request a live NEAR-to-Base quote from Rhea.','Repeat the original steps on a new build and record whether the issue is fixed.'];
 const sampleHandoffs = ["Brief approved · Return from wallet approval and check for an account address.","Assignment · Android tester, RC.1, wallet already installed.","Evidence accepted · Approval succeeded. The return screen kept loading.","Reward preview · 10 USDC for the accepted report. Builder reviews the quote.","Retest passed · On RC.2 the address appears after the same approval steps."];
 const root=document.querySelector('#screen');
-const defaults={name:'Jayking',device:'Android',campaigns:[],selected:0};
+const defaults={name:'Builder',device:'Android',campaigns:[],selected:0};
 let session=null;
-try{session=JSON.parse(sessionStorage.getItem('fieldwork.access'));if(session?.expires<=Date.now())session=null}catch{}
-const journalKey=session?.id && session.id!=='demo'?'fieldwork.journal.'+session.id:'fieldwork.journal';
+let journalKey='fieldwork.journal';
 let db;
 try{db=JSON.parse(localStorage.getItem(journalKey))||{...defaults,name:session?.email?.split("@")[0]||defaults.name}}catch{db=defaults}
 if(!db.identitySeed){db.identitySeed=globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2);try{localStorage.setItem(journalKey,JSON.stringify(db))}catch{}}
@@ -25,26 +24,22 @@ const specs = [
 function chapters(){
  return `<section class="proof-sheet" id="proof"><div><small>Reputation & ownership</small><h2>Give every fix<br>a field record.</h2><p>Carry the original claim, observed failure and retest together. Your next release review starts with evidence of what changed.</p><dl><dt>Assignment</dt><dd>Device, action and expected result</dd><dt>Evidence</dt><dd>Tester observations tied to a build</dd><dt>Verification</dt><dd>Repeatable steps and a recorded outcome</dd></dl></div><figure class="record-art"><div class="record-orbit"></div><div class="record-card"><small>Example / Android</small><strong>Wallet return</strong><p>RC.1 · Loading screen</p><p>RC.2 · Address visible</p><b>✓ Retest passed</b></div></figure></section>
  <section id="docs" class="spec-doc"><small>Field manual</small><h2>About the project</h2><div class="spec-layout"><nav aria-label="Documentation chapters">${specs.map(([label],i)=>`<a href="#spec-${i}">0${i+1} &nbsp; ${label}</a>`).join('')}</nav><div>${specs.map(([label,title,copy],i)=>`<article id="spec-${i}"><small>0${i+1} / ${label}</small><h3>${title}</h3><p>${copy}</p></article>`).join('')}</div></div></section>
- <section class="beta-sheet" id="beta"><small>Fieldwork private beta</small><h2>Put your next build<br>in a tester’s hands.</h2><p>Tell us what you’re building or which devices you can test.</p><form id="beta-request"><label>Name (optional)<input name="name" maxlength="100" autocomplete="name"></label><label>Email<input type="email" name="email" required maxlength="254" autocomplete="email"></label><label>Role (optional)<select name="role"><option value="">Select role</option><option>Builder</option><option>Tester</option><option>Both</option></select></label><label>Ecosystem (optional)<input name="ecosystem" maxlength="100" placeholder="NEAR, Base…"></label><label>What would you like to test? (optional)<textarea name="goal" maxlength="600"></textarea></label><button>Join the private beta</button><output role="status"></output></form></section>`;
+ <section class="beta-sheet" id="beta"><small>Fieldwork private beta</small><h2>Put your next build<br>in a tester’s hands.</h2><p>Tell us what you’re building or which devices you can test.</p><form id="beta-request"><label>Name (optional)<input name="name" maxlength="100" autocomplete="name"></label><label>Email<input type="email" name="email" required maxlength="254" autocomplete="email"></label><label>Role (optional)<select name="role"><option value="">Select role</option><option>Builder</option><option>Tester</option><option>Both</option></select></label><label>Ecosystem (optional)<input name="ecosystem" maxlength="100" value="NEAR" readonly></label><label>What would you like to test? (optional)<textarea name="goal" maxlength="600"></textarea></label><button>Join the private beta</button><output role="status"></output></form></section>`;
 }
 function signIn(){
- return `<section class="access-screen"><div class="access-intro"><small>Fieldwork / Builder console</small><h1>Your release<br>workspace.</h1><p>Review pitches, assign testers and track evidence across builds.</p></div><div class="access-card"><small>Builder access</small><h2>Sign in</h2><form id="access-form"><label>Email address<input name="email" type="email" autocomplete="email" required></label><button>Send sign-in code</button><output role="status"></output></form><button class="demo-entry" id="device-demo">Open device demo →</button><p>Demo campaigns are saved in this browser.</p><a href="#beta">Request private beta access</a></div></section>`;
-}
-async function accessRequest(payload){
- const response=await fetch('/api/access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
- const result=await response.json().catch(()=>({error:'Restart the Fieldwork preview server to enable access requests.'}));
- if(!response.ok)throw Error(result.error||'Request failed.');
- return result;
+ return '<section class="access-screen"><div class="access-intro"><small>Fieldwork / NEAR workspace</small><h1>Your account.<br>Your agent team.</h1><p>Find NEAR opportunities, work with five specialists and build a record of what you ship.</p></div><div class="access-card"><small>NEAR mainnet</small><h2>Connect to Fieldwork</h2><p>Choose a NEAR wallet and sign the Fieldwork access message to open your workspace.</p><div class="wallet-options"><button id="wallet-connect">Connect NEAR wallet →</button><button id="wallet-verify" hidden>Sign access message →</button></div><output class="wallet-status" id="wallet-status" role="status"></output><p class="wallet-note">The signature proves ownership of your NEAR account. Your wallet shows the message before you approve.</p><a href="#beta">Request private beta access</a></div></section>';
 }
 async function submitAccess(form,fields){
  const output=form.querySelector('output'),button=form.querySelector('button');
  button.disabled=true;output.textContent='Sending…';
- try{
-  if(form.id==='beta-request'){await accessRequest({op:'beta',...fields});form.innerHTML='<h3>Request received.</h3><p>Your beta request has been recorded.</p>';return}
-  if(!fields.code){await accessRequest({op:'send',email:fields.email});form.elements.email.readOnly=true;form.elements.email.insertAdjacentHTML('afterend','<span>Verification code</span><input aria-label="Verification code" name="code" autocomplete="one-time-code" inputmode="numeric" required pattern="[0-9]{6,10}">');form.elements.code.focus();button.textContent='Verify and sign in';output.textContent='Check your inbox for your code.';return}
-  const verified=await accessRequest({op:'verify',...fields});
-  sessionStorage.setItem('fieldwork.access',JSON.stringify(verified));location.reload();
- }catch(error){output.textContent=error.message}finally{button.disabled=false}
+ try{await accessRequest({op:'beta',...fields,ecosystem:'NEAR'});form.innerHTML='<h3>Request received.</h3><p>Your beta request has been recorded.</p>'}
+ catch(error){output.textContent=error.message}finally{button.disabled=false}
+}
+async function accessRequest(payload){
+ const response=await fetch('/api/access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+ const result=await response.json().catch(()=>({error:'The access service could not respond.'}));
+ if(!response.ok)throw Error(result.error||'Request failed.');
+ return result;
 }
 
 function landing(){
@@ -91,9 +86,9 @@ root.addEventListener?.('pointerout',releaseNode);root.addEventListener?.('focus
 function rack(){return '<aside class="rack"><small>Agent rack</small>'+agents.map((a,i)=>'<details style="--i:'+i+'"><summary><i></i><code>0'+(i+1)+'</code> '+a+'</summary><p>'+guide[i]+'</p></details>').join('')+'<a href="#profile">Builder profile →</a></aside>'}
 function stageForm(c){
  const vague=/any chain|seamless|easy|fast|all users/i.test(c.pitch);
- const forms=[(vague?'<p>Coach found a broad claim. Name one environment and an outcome someone can observe.</p>':'<p>Choose the action that would demonstrate this promise.</p>')+input('action','Test action')+input('expected','Expected result'),choice('device','Target environment',['Android','Desktop','iOS']),input('build','Build version')+input('steps','Reproduction steps')+input('result','Observed result')+choice('decision','Review decision',['Accept report','Request evidence']),input('amount','Reward in USDC','10')+input('sender','NEAR sender for live quote','',true)+input('recipient','Base recipient for live quote','',true)+'<p>Preview only. A quote does not transfer funds.</p><button type="button" id="quote">Request Rhea quote</button><pre id="quoteResult" aria-live="polite"></pre>',input('build','New build version')+input('result','Retest evidence')+choice('decision','Outcome',['Fixed','Still failing'])];
+ const forms=[(vague?'<p>Coach found a broad claim. Name one environment and an outcome someone can observe.</p>':'<p>Choose the action that would demonstrate this promise.</p>')+input('action','Test action')+input('expected','Expected result'),choice('device','Target environment',['Android','Desktop','iOS']),input('build','Build version')+input('steps','Reproduction steps')+input('result','Observed result')+choice('decision','Review decision',['Accept report','Request evidence']),input('amount','Reward in USDC','10')+input('sender','NEAR sender for live quote',session?.accountId||'',true)+input('recipient','Base recipient for live quote','',true)+'<p>Preview only. A quote does not transfer funds.</p><button type="button" id="quote">Request Rhea quote</button><pre id="quoteResult" aria-live="polite"></pre>',input('build','New build version')+input('result','Retest evidence')+choice('decision','Outcome',['Fixed','Still failing'])];
  return c.step===5?'<h3>Fix verified</h3>':'<form id="stage"><small>Stage '+(c.step+1)+' of 5</small><h3>'+agents[c.step]+'</h3>'+(c.step===1?'<button type="button" id="invite">Create tester invitation</button><p id="inviteLink"></p>':'')+(c.step===4?'<button type="button" id="invite">Invite tester to retest</button><p id="inviteLink"></p>':'')+((c.step===2&&c.invite)||(c.step===4)?'<button type="button" id="collect">Load tester evidence</button>':'')+forms[c.step]+input('instruction','Agent instructions (optional)',db.instructions?.[c.step]||'',true)+'<button type="button" id="askAgent">Ask '+agents[c.step]+'</button><p class="advice" aria-live="polite"></p><button>Record decision</button></form>'}
-const consolePages={workspace:'Campaigns',modules:'Agent rack',tracker:'Tracker',evidence:'Evidence',rewards:'Rewards',profile:'Profile'};
+const consolePages={opportunities:'Opportunities',workspace:'Campaigns',modules:'Agent rack',tracker:'Tracker',evidence:'Evidence',rewards:'Rewards',profile:'Profile'};
 function sidebar(page){
  return '<aside class="rail"><small>Work</small><nav>'+Object.entries(consolePages).filter(([key])=>key!=='profile').map(([key,label])=>'<a href="#'+key+'" '+(key===page?'aria-current="page"':'')+'>'+label+'</a>').join('')+'</nav><small>Account</small><nav><a href="#profile" '+(page==='profile'?'aria-current="page"':'')+'>Profile</a></nav><div class="rail-id">'+esc(db.name)+'</div><button id="logout">Sign out</button></aside>'
 }
@@ -140,23 +135,40 @@ function downloadRecord(index){
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
-function consoleScreen(page){const content=page==='tracker'?tracker():page==='workspace'?workspace():page==='profile'?profileScreen():page==='modules'?'<section class="desk"><small>Release operations</small><h2>Your agent system</h2><p>Inspect a specialist’s assignment, then open a campaign to put the five agents to work.</p><a class="button" href="#workspace">Open campaigns →</a>'+rack()+'</section>':ledger(page);return '<div class="console-shell">'+sidebar(page)+content+'</div>'}
+function consoleScreen(page){
+ const match=page.match(/^agent\/([0-4])$/);
+ if(match)activeAgent=Number(match[1]);
+ const content=match?agentWorkspace(activeAgent):page==='opportunities'?opportunities():page==='tracker'?tracker():page==='workspace'?workspace():page==='profile'?profileScreen():page==='modules'?agentMarketplace():ledger(page);
+ const hero=['opportunities','modules'].includes(page)?consoleHero(page):'';
+ return consoleToolbar(page)+hero+'<div class="console-body">'+content+consoleAside()+'</div>';
+}
 
 function workspace(){const c=db.campaigns[db.selected];return '<section class="desk"><small>'+esc(db.name)+' / Campaign operations</small><h2>Campaigns</h2><details '+(!c?'open':'')+'><summary>Create campaign</summary><form id="create">'+input('name','Project name')+input('pitch','Builder pitch')+'<button>Create campaign</button></form></details>'+(c?'<label>Open campaign<select id="switch">'+db.campaigns.map((v,i)=>'<option value="'+i+'" '+(i===db.selected?'selected':'')+'>'+esc(v.name)+'</option>').join('')+'</select></label><h3>'+esc(c.name)+'</h3><p>'+esc(c.pitch)+'</p><button class="record-download" data-export-record="'+db.selected+'">Download field record ↓</button>'+c.notes.map(n=>'<section class="log"><strong>'+esc(n.agent)+'</strong><p>'+esc(n.note)+'</p></section>').join('')+stageForm(c):'')+'</section>'}
 function render(){const page=location.hash.slice(1);
- const privatePage=Object.hasOwn(consolePages,page);
+ const privatePage=Object.hasOwn(consolePages,page)||/^agent\/[0-4]$/.test(page);
  const accessPage=(page==='signin'||privatePage)&&!session;
  if(typeof document.body!=='undefined'){document.body.dataset.view=accessPage?'access':privatePage||page==='signin'?'console':'public'}
- root.innerHTML=accessPage?signIn():page==='signin'?consoleScreen('modules'):page.startsWith('test/')?testerPage():Object.hasOwn(consolePages,page)?consoleScreen(page):landing();root.insertAdjacentHTML('beforeend','<p role="status" id="message"></p>');draw();if(page.startsWith('test/'))loadTesterBrief();if(page==='constellation')document.querySelector('.sky').scrollIntoView();if(page==='release')document.querySelector('#release').scrollIntoView();if(['guide','proof','docs','beta'].includes(page)||/^spec-[0-3]$/.test(page))document.getElementById(page==='guide'?'docs':page)?.scrollIntoView()}
-root.onchange=e=>{if(e.target.id==='switch')save({...db,selected:Number(e.target.value)})};
+ root.innerHTML=accessPage?signIn():page==='signin'?consoleScreen('opportunities'):page.startsWith('test/')?testerPage():privatePage?consoleScreen(page):landing();root.insertAdjacentHTML('beforeend','<p role="status" id="message"></p>');draw();if(page.startsWith('test/'))loadTesterBrief();if(page==='constellation')document.querySelector('.sky').scrollIntoView();if(page==='release')document.querySelector('#release').scrollIntoView();if(['guide','proof','docs','beta'].includes(page)||/^spec-[0-3]$/.test(page))document.getElementById(page==='guide'?'docs':page)?.scrollIntoView()}
+root.oninput=e=>{if(e.target.id==='opportunity-search'){browse.query=e.target.value;document.querySelector('#opportunity-results').innerHTML=opportunityResults()}};
+root.onchange=e=>{if(e.target.id==='opportunity-skill'){browse.category=e.target.value;render();return}if(e.target.id==='switch')save({...db,selected:Number(e.target.value)})};
 root.onclick=async e=>{
+ const kind=e.target.closest?.('[data-kind]');
+ if(kind){browse.kind=kind.dataset.kind;render();return}
+ if(e.target.closest?.('[data-show-saved]')){browse.saved=!browse.saved;render();return}
+ const bookmark=e.target.closest?.('[data-bookmark]');
+ if(bookmark){const id=bookmark.dataset.bookmark;const bookmarks=savedIds().includes(id)?savedIds().filter(value=>value!==id):[...savedIds(),id];save({...db,bookmarks});return}
+ if(['wallet-connect','wallet-verify'].includes(e.target.id)){
+  const output=document.querySelector('#wallet-status');e.target.disabled=true;
+  try{if(!window.FieldworkWallet)throw Error('Wallet tools are loading. Please try again.');await window.FieldworkWallet.connect(e.target.id==='wallet-verify')}
+  catch(error){output.textContent=error.message}finally{e.target.disabled=false}return
+ }
+
  const open=e.target.closest?.('[data-open-campaign]');
  if(open){db.selected=Number(open.dataset.openCampaign);localStorage.setItem(journalKey,JSON.stringify(db));location.hash='workspace';return}
  const record=e.target.closest?.('[data-export-record]');
  if(record){downloadRecord(Number(record.dataset.exportRecord));return}
 
- if(e.target.id==='device-demo'){sessionStorage.setItem('fieldwork.access',JSON.stringify({id:'demo'}));location.replace('#modules');location.reload();return}
- if(e.target.id==='logout'){sessionStorage.removeItem('fieldwork.access');location.replace('#signin');location.reload();return}
+ if(e.target.id==='logout'){await window.FieldworkWallet.logout();return}
 if(e.target.id==='invite'||e.target.id==='collect'){
  const c=db.campaigns[db.selected],msg=document.querySelector('#message');try{
  const retest=c.step===4,slot=retest?'retestInvite':'invite';
@@ -168,17 +180,17 @@ if(e.target.id==='invite'||e.target.id==='collect'){
  const button=e.target,display=button.form.querySelector('.advice'),campaign=db.campaigns[db.selected];
  const values=Object.fromEntries(new FormData(button.form));button.disabled=true;display.textContent='Reading campaign evidence…';
  try{const response=await providerFetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agent:agents[campaign.step],context:{pitch:campaign.pitch,notes:campaign.notes,fields:values,profiles:[{name:db.name,device:db.device}]}})});
- const result=await response.json();display.textContent=result.advice||result.error||'No recommendation returned.';if(result.advice)button.form.dataset.advice=result.advice;
- }catch{display.textContent='Run the server with NEAR_AI_API_KEY to get an agent recommendation.'}finally{button.disabled=false}return
- }if(e.target.id!=='quote')return;const target=document.querySelector('#quoteResult'),f=Object.fromEntries(new FormData(e.target.form));try{target.textContent='Requesting quote…';const res=await providerFetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(f)});const data=await res.json();target.textContent=JSON.stringify(data,null,2)}catch{target.textContent='Run the Next.js server with a Rhea access token for live quotes.'}};
-root.onsubmit=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));if(['beta-request','access-form'].includes(e.target.id)){await submitAccess(e.target,f);return}const next=JSON.parse(JSON.stringify(db));try{
+ const result=await response.json();display.textContent=result.advice?((result.source==='near-ai'?'Fieldwork Agent AI':'Evidence checks')+'\n'+result.advice):(result.error||'No recommendation returned.');if(result.advice){button.form.dataset.advice=result.advice;button.form.dataset.adviceSource=result.source;}
+ }catch{display.textContent='The agent could not connect. Please try again.'}finally{button.disabled=false}return
+ }if(e.target.id!=='quote')return;const target=document.querySelector('#quoteResult'),f=Object.fromEntries(new FormData(e.target.form));try{target.textContent='Requesting quote…';const res=await providerFetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(f)});const data=await res.json();target.textContent=JSON.stringify(data,null,2)}catch{target.textContent='The quote service could not be reached. Please try again.'}};
+root.onsubmit=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));if(e.target.id==='beta-request'){await submitAccess(e.target,f);return}if(e.target.id==='agent-run'){await runAgentWorkspace(e.target,f);return}const next=JSON.parse(JSON.stringify(db));try{
  if(e.target.id==='tester'){const [,id,key]=location.hash.slice(1).split('/');await fieldtest({op:'submit',id,key,...f});e.target.remove();document.querySelector('#message').textContent='Evidence delivered to the builder.';return}
  if(e.target.id==='profile'){next.name=f.name;next.device=f.device;next.role=f.role;next.handle=f.handle}
  if(e.target.id==='create'){next.selected=next.campaigns.push({name:f.name,pitch:f.pitch,step:0,notes:[]})-1}
  if(e.target.id==='stage'){const c=next.campaigns[next.selected];let note=Object.entries(f).filter(([,v])=>v).map(([k,v])=>k+' · '+v).join('\n');
- if(c.step===1){const tester=f.device.toLowerCase()===db.device.toLowerCase()?db.name:({Android:'Ada (sample)',Desktop:'Mika (sample)',iOS:'Sol (sample)'})[f.device];note+='\nMatched '+tester+' for '+f.device}
+ if(c.step===1){const tester=f.device.toLowerCase()===db.device.toLowerCase()?db.name:null;note+='\n'+(tester?'Available profile: '+tester+' for '+f.device:'Coverage gap: invite a tester with '+f.device)}
  if(c.step===3){if(!/^\d{1,8}(\.\d{1,6})?$/.test(f.amount)||Number(f.amount)<=0)throw Error('Enter a positive USDC amount.');note+='\nReward preview only.'}
- next.instructions={...next.instructions,[c.step]:f.instruction||''};if(e.target.dataset.advice)note+='\nAgent recommendation · '+e.target.dataset.advice;
+ next.instructions={...next.instructions,[c.step]:f.instruction||''};if(e.target.dataset.advice)note+='\n'+(e.target.dataset.adviceSource==='near-ai'?'Fieldwork Agent AI':'Evidence checks')+' · '+e.target.dataset.advice;
  c.notes.push({agent:agents[c.step],note});if(c.step===4&&f.decision==='Still failing')delete c.retestInvite;if(!['Still failing','Request evidence'].includes(f.decision))c.step++}
  save(next);document.querySelector('#message').textContent='Saved to this browser.';
  }catch(err){document.querySelector('#message').textContent=err.message}};
@@ -190,10 +202,29 @@ async function fieldtest(payload){
 function testerPage(){return '<section class="desk"><small>Private tester invitation</small><h2>Field assignment</h2><p id="testerBrief">Loading brief…</p><form hidden id="tester">'+input('name','Tester name',db.name)+input('device','Device',db.device)+input('build','Build version')+input('steps','Steps taken')+input('result','Observed result')+'<button>Send evidence</button></form></section>'}
 async function loadTesterBrief(){const [,id,key]=location.hash.slice(1).split('/');const target=document.querySelector('#testerBrief'),form=document.querySelector('#tester');try{const result=await fieldtest({op:'open',id,key});target.textContent=result.brief;form.hidden=false}catch(err){target.textContent=err.message}}
 
-let operatorToken='';
 async function providerFetch(url,options){
- const send=()=>fetch(url,{...options,headers:{...options.headers,...(operatorToken?{Authorization:'Bearer '+operatorToken}:{})}});
- let response=await send();
- if(response.status===401){operatorToken=prompt('Enter the Fieldwork operator token to use this provider.')?.trim()||'';if(operatorToken)response=await send()}
+ const response=await fetch(url,{...options,credentials:'same-origin'});
+ if(response.status===401){session=null;render()}
  return response;
 }
+async function runAgentWorkspace(form,fields){
+ const button=form.querySelector('button'),display=form.querySelector('output');
+ button.disabled=true;display.textContent='Reviewing your brief…';
+ try{
+  const c=db.campaigns[db.selected];
+  const context={pitch:fields.request,notes:c?.notes||[],fields:{...fields},profiles:[{name:db.name,device:db.device}]};
+  const response=await providerFetch('/api/agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agent:agents[activeAgent],context})});
+  const result=await response.json();
+  if(!response.ok)throw Error(result.error||'The agent could not respond.');
+  display.textContent=(result.source==='near-ai'?'Fieldwork Agent AI':'Evidence checks')+'\n\n'+result.advice;
+ }catch(error){display.textContent=error.message}finally{button.disabled=false}
+}
+function applyWalletSession(verified){
+ session=verified;
+ journalKey='fieldwork.journal.'+verified.accountId;
+ try{db=JSON.parse(localStorage.getItem(journalKey))||{...defaults,name:verified.accountId,campaigns:[],selected:0}}catch{db={...defaults,name:verified.accountId,campaigns:[],selected:0}}
+ db.identitySeed=db.identitySeed||verified.accountId;
+ if(location.hash==='#signin')location.hash='opportunities';
+ render();
+}
+if(typeof window!=='undefined')window.addEventListener('fieldwork-session',event=>{if(event.detail)applyWalletSession(event.detail);else {session=null;render()}});
